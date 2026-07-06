@@ -19,7 +19,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 SCRIPT_DIR = __import__("pathlib").Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
 
-BASE_MODEL = "openbmb/MiniCPM5-1B-Base"
+BASE_MODEL = "openbmb/MiniCPM5-1B"
 DEFAULT_MOE_PATH = str(PROJECT_DIR / "models" / "mixtral-moe")
 
 EVAL_PROMPTS = [

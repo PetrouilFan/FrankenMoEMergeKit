@@ -10,7 +10,7 @@
 # Or use the build script:
 #   python build_mixtral_moe.py [--output-dir PATH] [--gate-mode hidden] [--load-in-4bit]
 
-base_model: openbmb/MiniCPM5-1B-Base
+base_model: openbmb/MiniCPM5-1B
 gate_mode: hidden
 dtype: bfloat16
 architecture: mixtral

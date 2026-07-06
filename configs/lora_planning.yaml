@@ -8,7 +8,7 @@
 # All experts train on ALL data — specialization via LoRA config + router.
 
 model:
-  name: "openbmb/MiniCPM5-1B-Base"
+  name: "openbmb/MiniCPM5-1B"
   save_path: "models/experts/planning"
 
 data:
