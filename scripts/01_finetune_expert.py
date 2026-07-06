@@ -53,29 +53,16 @@ def detect_dataset_format(dataset) -> str:
 
 
 def fix_tool_calls_args(example):
-    """Parse JSON string arguments in tool_calls to dicts for chat template compatibility.
+    """Normalize message fields for chat template compatibility.
 
-    The OpenAI format stores arguments as JSON strings, but the MiniCPM5
-    chat template expects them as dicts with .items() iteration.
+    Ensures consistent types across all messages so PyArrow can build
+    a uniform Arrow table without type conflicts.
     """
     fixed_messages = []
     for msg in example["messages"]:
         fixed = dict(msg)
-        if fixed.get("tool_calls"):
-            fixed_calls = []
-            for tc in fixed["tool_calls"]:
-                tc_fixed = dict(tc)
-                if "function" in tc_fixed:
-                    func = dict(tc_fixed["function"])
-                    if isinstance(func.get("arguments"), str):
-                        try:
-                            func["arguments"] = json.loads(func["arguments"])
-                        except (json.JSONDecodeError, TypeError):
-                            func["arguments"] = {}
-                    tc_fixed["function"] = func
-                fixed_calls.append(tc_fixed)
-            fixed["tool_calls"] = fixed_calls
-        else:
+        # Ensure tool_calls key exists
+        if "tool_calls" not in fixed:
             fixed["tool_calls"] = []
         # Ensure content is never None (template requires string)
         if fixed.get("content") is None:
