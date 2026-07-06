@@ -107,6 +107,7 @@ def main():
         quantization_config=bnb_config,
         device_map="auto",
         trust_remote_code=True,
+        torch_dtype=dtype_config["compute_dtype"],
     )
     model = prepare_model_for_kbit_training(model)
     model.config.use_cache = False
