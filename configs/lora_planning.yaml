@@ -38,8 +38,7 @@ training:
   logging_steps: 10
   save_steps: 50
   save_total_limit: 2
-  bf16: false
-  fp16: true
+  bf16: true
   gradient_checkpointing: true
   max_grad_norm: 1.0
   lr_scheduler_type: "cosine"

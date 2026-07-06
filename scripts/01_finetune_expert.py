@@ -60,11 +60,11 @@ def detect_dataset_format(dataset) -> str:
 def get_dtype_config(training_cfg: dict) -> dict:
     """Return dtype config dict auto-detected from GPU capability.
 
-    Returns {'bf16': bool, 'fp16': bool, 'compute_dtype': torch.dtype}
-    Falls back to fp16 when bf16 is unsupported or GPU is unavailable.
+    Returns {'bf16': bool, 'compute_dtype': torch.dtype}
+    Uses bf16 when supported and enabled in config; otherwise no mixed precision.
     """
     if not torch.cuda.is_available():
-        return {"bf16": False, "fp16": False, "compute_dtype": torch.float32}
+        return {"bf16": False, "compute_dtype": torch.float32}
 
     try:
         supports_bf16 = torch.cuda.is_bf16_supported()
@@ -72,9 +72,8 @@ def get_dtype_config(training_cfg: dict) -> dict:
         supports_bf16 = False
 
     if supports_bf16 and training_cfg.get("bf16", False):
-        return {"bf16": True, "fp16": False, "compute_dtype": torch.bfloat16}
-    else:
-        return {"bf16": False, "fp16": True, "compute_dtype": torch.float16}
+        return {"bf16": True, "compute_dtype": torch.bfloat16}
+    return {"bf16": False, "compute_dtype": torch.float32}
 
 
 
@@ -109,6 +108,7 @@ def main():
         trust_remote_code=True,
         dtype=dtype_config["compute_dtype"],
     )
+    model.config.torch_dtype = dtype_config["compute_dtype"]
     model = prepare_model_for_kbit_training(model)
     model.config.use_cache = False
 
@@ -162,7 +162,6 @@ def main():
             save_steps=cfg["training"]["save_steps"],
             save_total_limit=cfg["training"]["save_total_limit"],
             bf16=dtype_config["bf16"],
-            fp16=dtype_config["fp16"],
             gradient_checkpointing=cfg["training"]["gradient_checkpointing"],
             max_grad_norm=cfg["training"]["max_grad_norm"],
             max_steps=cfg["training"].get("max_steps", -1),
@@ -202,7 +201,6 @@ def main():
             save_steps=cfg["training"]["save_steps"],
             save_total_limit=cfg["training"]["save_total_limit"],
             bf16=dtype_config["bf16"],
-            fp16=dtype_config["fp16"],
             gradient_checkpointing=cfg["training"]["gradient_checkpointing"],
             max_grad_norm=cfg["training"]["max_grad_norm"],
             max_steps=cfg["training"].get("max_steps", -1),
