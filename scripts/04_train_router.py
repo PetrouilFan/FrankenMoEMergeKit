@@ -141,7 +141,9 @@ def main():
     full_train = load_dataset(HF_DATASET, split="train")
     sample_size = max(100, int(len(full_train) * args.sample_fraction))
     train_dataset = full_train.shuffle(seed=42).select(range(sample_size))
-    train_dataset = train_dataset.map(fix_tool_calls_args)
+    train_dataset = Dataset.from_list(
+        [fix_tool_calls_args(ex) for ex in train_dataset]
+    )
     print(f"  Router train set: {len(train_dataset)} examples")
 
     # Configure training

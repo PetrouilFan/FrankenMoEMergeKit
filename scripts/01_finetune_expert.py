@@ -149,9 +149,14 @@ def main():
             print(f"Warning: format is 'messages' but dataset has field: {list(train_dataset[0].keys())}")
 
         # Fix tool_calls arguments: parse JSON strings to dicts for chat template
+        # Use list comprehension + Dataset.from_list to avoid PyArrow type inference issues
         print("Preprocessing: parsing tool_calls arguments...")
-        train_dataset = train_dataset.map(fix_tool_calls_args)
-        val_dataset = val_dataset.map(fix_tool_calls_args)
+        train_dataset = Dataset.from_list(
+            [fix_tool_calls_args(ex) for ex in train_dataset]
+        )
+        val_dataset = Dataset.from_list(
+            [fix_tool_calls_args(ex) for ex in val_dataset]
+        )
 
         print(f"Dataset: {len(train_dataset)} train, {len(val_dataset)} val (messages format)")
 
