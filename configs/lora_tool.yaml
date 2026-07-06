@@ -38,7 +38,8 @@ training:
   logging_steps: 10
   save_steps: 100
   save_total_limit: 2
-  bf16: true
+  bf16: false
+  fp16: true
   gradient_checkpointing: true
   max_grad_norm: 1.0
   lr_scheduler_type: "cosine"
@@ -49,6 +50,6 @@ quantization:
   load_in_4bit: true
   bnb_4bit_quant_type: "nf4"
   bnb_4bit_use_double_quant: true
-  bnb_4bit_compute_dtype: "bfloat16"
+  bnb_4bit_compute_dtype: "float16"
 
 enable_thinking: false

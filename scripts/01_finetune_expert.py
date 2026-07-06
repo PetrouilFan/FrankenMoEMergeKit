@@ -18,7 +18,13 @@ Usage:
     python scripts/01_finetune_expert.py reasoning
     python scripts/01_finetune_expert.py planning
 """
+import os
 import sys
+
+# Force CUDA device visibility to work around NVML init issues on Linux.
+# Must be set before any torch/cuda imports.
+if "CUDA_VISIBLE_DEVICES" not in os.environ and sys.platform == "linux":
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import yaml
 import torch
@@ -51,6 +57,26 @@ def detect_dataset_format(dataset) -> str:
     return "text"
 
 
+def get_dtype_config(training_cfg: dict) -> dict:
+    """Return dtype config dict auto-detected from GPU capability.
+
+    Returns {'bf16': bool, 'fp16': bool, 'compute_dtype': torch.dtype}
+    Falls back to fp16 when bf16 is unsupported or GPU is unavailable.
+    """
+    if not torch.cuda.is_available():
+        return {"bf16": False, "fp16": False, "compute_dtype": torch.float32}
+
+    try:
+        supports_bf16 = torch.cuda.is_bf16_supported()
+    except (RuntimeError, AssertionError):
+        supports_bf16 = False
+
+    if supports_bf16 and training_cfg.get("bf16", False):
+        return {"bf16": True, "fp16": False, "compute_dtype": torch.bfloat16}
+    else:
+        return {"bf16": False, "fp16": True, "compute_dtype": torch.float16}
+
+
 
 
 
@@ -67,11 +93,13 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(cfg["model"]["name"], trust_remote_code=True)
     tokenizer.padding_side = "right"
 
+    dtype_config = get_dtype_config(cfg["training"])
+
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=cfg["quantization"]["load_in_4bit"],
         bnb_4bit_quant_type=cfg["quantization"]["bnb_4bit_quant_type"],
         bnb_4bit_use_double_quant=cfg["quantization"]["bnb_4bit_use_double_quant"],
-        bnb_4bit_compute_dtype=getattr(torch, cfg["quantization"]["bnb_4bit_compute_dtype"]),
+        bnb_4bit_compute_dtype=dtype_config["compute_dtype"],
     )
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -132,7 +160,8 @@ def main():
             logging_steps=cfg["training"]["logging_steps"],
             save_steps=cfg["training"]["save_steps"],
             save_total_limit=cfg["training"]["save_total_limit"],
-            bf16=cfg["training"]["bf16"],
+            bf16=dtype_config["bf16"],
+            fp16=dtype_config["fp16"],
             gradient_checkpointing=cfg["training"]["gradient_checkpointing"],
             max_grad_norm=cfg["training"]["max_grad_norm"],
             max_steps=cfg["training"].get("max_steps", -1),
@@ -171,7 +200,8 @@ def main():
             logging_steps=cfg["training"]["logging_steps"],
             save_steps=cfg["training"]["save_steps"],
             save_total_limit=cfg["training"]["save_total_limit"],
-            bf16=cfg["training"]["bf16"],
+            bf16=dtype_config["bf16"],
+            fp16=dtype_config["fp16"],
             gradient_checkpointing=cfg["training"]["gradient_checkpointing"],
             max_grad_norm=cfg["training"]["max_grad_norm"],
             max_steps=cfg["training"].get("max_steps", -1),
