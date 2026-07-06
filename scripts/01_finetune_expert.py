@@ -142,7 +142,7 @@ def main():
             report_to="none",
             run_name=f"frankenmoe-{config_name}",
             max_length=data_cfg["max_length"],
-            assistant_only_loss=True,
+            assistant_only_loss=False,
             packing=False,
         )
 
