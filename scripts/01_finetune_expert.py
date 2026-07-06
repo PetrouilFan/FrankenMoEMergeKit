@@ -23,7 +23,7 @@ import sys
 
 import yaml
 import torch
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
