@@ -14,7 +14,7 @@ model:
 data:
   format: "messages"
   hf_path: "Petrouil/opencode-agentic-mini"
-  max_length: 12000
+  max_length: 8192
 
 lora:
   r: 32

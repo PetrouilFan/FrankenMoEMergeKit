@@ -79,10 +79,13 @@ def main():
         quantization_config=bnb_config,
         device_map="auto",
         trust_remote_code=True,
-        torch_dtype=torch.bfloat16,
     )
     model = prepare_model_for_kbit_training(model)
     model.config.use_cache = False
+
+    gpu_mem = torch.cuda.memory_allocated() / 1e9
+    gpu_reserved = torch.cuda.memory_reserved() / 1e9
+    print(f"GPU memory after model load: {gpu_mem:.2f} GB allocated, {gpu_reserved:.2f} GB reserved")
 
     lora_config = LoraConfig(
         r=cfg["lora"]["r"],

@@ -52,7 +52,6 @@ def load_model(model_path: str):
             quantization_config=bnb_config,
             device_map="auto",
             trust_remote_code=True,
-            torch_dtype=torch.bfloat16,
         )
     else:
         model = AutoModelForCausalLM.from_pretrained(
