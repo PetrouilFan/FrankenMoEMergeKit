@@ -47,8 +47,13 @@ def fix_tool_calls_args(example):
                     tc_fixed["function"] = func
                 fixed_calls.append(tc_fixed)
             fixed["tool_calls"] = fixed_calls
+        else:
+            fixed["tool_calls"] = []
         if fixed.get("content") is None:
             fixed["content"] = ""
+        rc = fixed.get("reasoning_content")
+        if rc is not None and not isinstance(rc, str):
+            fixed["reasoning_content"] = str(rc)
         fixed_messages.append(fixed)
     return {"messages": fixed_messages}
 
