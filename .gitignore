@@ -1,0 +1,36 @@
+# Models & checkpoints
+models/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Colab runtime
+.ipynb_checkpoints/
+
+# MergeKit generated configs
+config_colab.yaml

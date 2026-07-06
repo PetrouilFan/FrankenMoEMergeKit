@@ -1,0 +1,54 @@
+# LoRA config for Tool Expert
+# Specialization: function calling, API calls, structured outputs
+# Small rank (32) = fast convergence on structured patterns.
+#
+# IMPORTANT: Only MLP layers are trained. Attention layers are frozen
+# to keep expert attention identical to the base model, which is
+# required for MergeKit MoE (base model attention + expert MLPs).
+# All experts train on ALL data — specialization via LoRA config + router.
+
+model:
+  name: "openbmb/MiniCPM5-1B-Base"
+  save_path: "models/experts/tool"
+
+data:
+  format: "messages"
+  hf_path: "Petrouil/opencode-agentic-mini"
+  max_length: 8000
+
+lora:
+  r: 32
+  alpha: 64
+  dropout: 0.05
+  target_modules:
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"
+  task_type: "CAUSAL_LM"
+
+training:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  learning_rate: 3.0e-4
+  num_train_epochs: 3
+  max_steps: 500
+  warmup_ratio: 0.05
+  eval_strategy: "no"
+  logging_steps: 10
+  save_steps: 100
+  save_total_limit: 2
+  bf16: true
+  gradient_checkpointing: true
+  max_grad_norm: 1.0
+  lr_scheduler_type: "cosine"
+  optim: "paged_adamw_8bit"
+  ddp_find_unused_parameters: false
+
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: "nf4"
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: "bfloat16"
+
+enable_thinking: false

@@ -1,0 +1,78 @@
+# MergeKit MoE Configuration
+# Builds a Mixtral-style MoE from 4 FrankenMoE domain experts
+#
+# All experts train on ALL data — specialization via LoRA configs + router.
+# Router is initialized via positive_prompts (hidden gate mode).
+#
+# Usage:
+#   mergekit-moe config.yaml ./models/mixtral-moe --copy-tokenizer --load-in-4bit
+#
+# Or use the build script:
+#   python build_mixtral_moe.py [--output-dir PATH] [--gate-mode hidden] [--load-in-4bit]
+
+base_model: openbmb/MiniCPM5-1B-Base
+gate_mode: hidden
+dtype: bfloat16
+architecture: mixtral
+experts_per_token: 2
+
+experts:
+  - source_model: /home/petrouil/Projects/FrankenMoEMergeKit/models/experts/tool
+    positive_prompts:
+      - "You have access to the following tools. Call the appropriate function with correct parameters."
+      - "Parse the user request and generate a structured function call with arguments."
+      - "Use the provided API to fetch data and return structured results."
+      - "Identify which function to call and provide the required parameters in JSON format."
+      - "Given a user request, determine the correct tool invocation and execute it."
+      - "Don't make assumptions about what values to plug into functions. Parse the user request carefully."
+    negative_prompts:
+      - "Read the source code file and understand its implementation details."
+      - "Write a new function that implements the required algorithm."
+      - "Refactor the existing code to improve readability and performance."
+      - "Let me think through this problem step by step to find the optimal solution."
+      - "Decompose this task into smaller subtasks and track progress."
+
+  - source_model: /home/petrouil/Projects/FrankenMoEMergeKit/models/experts/coding
+    positive_prompts:
+      - "Read the source code, understand the architecture, and implement the required changes."
+      - "Write clean, well-structured code that follows best practices."
+      - "Refactor the existing implementation to improve maintainability."
+      - "Edit the file to fix the bug and ensure all tests pass."
+      - "Analyze the codebase structure and modify the relevant modules."
+      - "Create a new module that encapsulates the business logic."
+    negative_prompts:
+      - "You are a function calling AI model. Call the appropriate function with correct parameters."
+      - "Determine which API endpoint to use and provide the request body in JSON."
+      - "Let me think through this problem step by step."
+      - "Decompose this task into smaller subtasks and create a TODO list."
+      - "Track progress on each subtask and update status."
+
+  - source_model: /home/petrouil/Projects/FrankenMoEMergeKit/models/experts/reasoning
+    positive_prompts:
+      - "Let me think through this step by step to find the optimal solution."
+      - "Analyze the problem, identify constraints, and derive the correct answer."
+      - "Consider the edge cases and prove the correctness of this approach."
+      - "Break down the complex problem and reason through each component."
+      - "Evaluate the tradeoffs between different approaches and justify the choice."
+      - "Consider the time and space complexity of this algorithm."
+    negative_prompts:
+      - "You are a function calling AI model. Call the appropriate function."
+      - "Read the source code file and understand its implementation."
+      - "Write a new function that implements the required algorithm."
+      - "Decompose this task into smaller subtasks and track progress."
+      - "Create a detailed plan with milestones and deadlines."
+
+  - source_model: /home/petrouil/Projects/FrankenMoEMergeKit/models/experts/planning
+    positive_prompts:
+      - "Decompose this task into smaller subtasks and create a TODO list."
+      - "Create a plan with milestones, assign priorities, and track progress."
+      - "Break down the project into phases and identify dependencies between tasks."
+      - "Organize the work into a structured roadmap with clear deliverables."
+      - "Track progress on each subtask and update the status as work completes."
+      - "Identify blockers and reorder tasks to maximize throughput."
+    negative_prompts:
+      - "You are a function calling AI model. Call the appropriate function."
+      - "Read the source code file and understand its implementation."
+      - "Write clean, well-structured code that follows best practices."
+      - "Let me think through this problem step by step to find the optimal solution."
+      - "Analyze the time and space complexity of this algorithm."
