@@ -18,12 +18,11 @@ Usage:
     python scripts/01_finetune_expert.py reasoning
     python scripts/01_finetune_expert.py planning
 """
-import json
 import sys
 
 import yaml
 import torch
-from datasets import Dataset, load_dataset
+from datasets import load_dataset
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -52,27 +51,6 @@ def detect_dataset_format(dataset) -> str:
     return "text"
 
 
-def fix_tool_calls_args(example):
-    """Normalize message fields for chat template compatibility.
-
-    Ensures consistent types across all messages so PyArrow can build
-    a uniform Arrow table without type conflicts.
-    """
-    fixed_messages = []
-    for msg in example["messages"]:
-        fixed = dict(msg)
-        # Ensure tool_calls key exists
-        if "tool_calls" not in fixed:
-            fixed["tool_calls"] = []
-        # Ensure content is never None (template requires string)
-        if fixed.get("content") is None:
-            fixed["content"] = ""
-        # Ensure reasoning_content is always str or None (never mixed)
-        rc = fixed.get("reasoning_content")
-        if rc is not None and not isinstance(rc, str):
-            fixed["reasoning_content"] = str(rc)
-        fixed_messages.append(fixed)
-    return {"messages": fixed_messages}
 
 
 
@@ -135,15 +113,9 @@ def main():
         if detected_format != "messages":
             print(f"Warning: format is 'messages' but dataset has field: {list(train_dataset[0].keys())}")
 
-        # Fix tool_calls arguments: parse JSON strings to dicts for chat template
-        # Use list comprehension + Dataset.from_list to avoid PyArrow type inference issues
-        print("Preprocessing: parsing tool_calls arguments...")
-        train_dataset = Dataset.from_list(
-            [fix_tool_calls_args(ex) for ex in train_dataset]
-        )
-        val_dataset = Dataset.from_list(
-            [fix_tool_calls_args(ex) for ex in val_dataset]
-        )
+        # Dataset is already clean on HF (args as dicts, content as strings).
+        # No preprocessing needed — avoid Dataset.from_list() which triggers
+        # PyArrow type inference errors on mixed tool_calls structures.
 
         print(f"Dataset: {len(train_dataset)} train, {len(val_dataset)} val (messages format)")
 
